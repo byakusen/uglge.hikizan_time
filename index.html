@@ -153,6 +153,18 @@
     border-radius:12px; padding:12px 10px; min-height:24px;
   }
 
+  /* れんしゅう:しゅるいえらび */
+  .cat-grid{ display:grid; grid-template-columns:1fr; gap:8px; margin:14px 0 8px; }
+  .cat-btn{ font-family:inherit; font-size:17px; font-weight:800; padding:13px 10px; border-radius:12px;
+    border:2px solid var(--navy); background:#fff; color:var(--navy); box-shadow:0 3px 0 #c9d8ec; text-align:center; }
+  .cat-btn.on{ background:var(--navy); color:#fff; }
+  .cat-btn:active{ transform:translateY(2px); box-shadow:0 1px 0 #c9d8ec; }
+  .dan-actions{ display:flex; gap:8px; justify-content:center; margin-bottom:2px; }
+  .dan-actions button{ font-family:inherit; font-size:14px; font-weight:800; padding:7px 16px;
+    border-radius:999px; border:2px solid var(--blue); background:#fff; color:var(--blue); }
+  .dan-actions button:active{ transform:translateY(1px); }
+  .pick-status{ min-height:20px; font-size:14px; color:var(--red); font-weight:700; margin:2px 0 6px; }
+
   @keyframes pop { from{transform:scale(.94);opacity:.4;} to{transform:scale(1);opacity:1;} }
   @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:.55;} }
   @keyframes fadeOut { to{opacity:0;} }
@@ -164,16 +176,56 @@
   <header>
     <div class="logo"><span style="font-size:26px">✏️</span><span>ひき算タイムアタック</span></div>
     <nav class="tabs">
-      <button class="tab active" id="tabPlay">れんしゅう</button>
+      <button class="tab active" id="tabPractice">れんしゅう</button>
+      <button class="tab" id="tabPlay">テスト</button>
       <button class="tab" id="tabWeak">にがてもんだい</button>
       <button class="tab" id="tabCal">カレンダー</button>
     </nav>
   </header>
 
-  <!-- ===== れんしゅう ===== -->
-  <main class="stage" id="playScreen">
+  <!-- ===== れんしゅう(しゅるいをえらんで練習) ===== -->
+  <main class="stage" id="practiceScreen">
+    <div class="card" id="practicePick">
+      <h1>れんしゅう</h1>
+      <p style="font-size:15px;color:#5b6b82;line-height:1.85;margin-bottom:2px;">
+        れんしゅうしたい 「しゅるい」を えらんで スタート!<br>いくつ えらんでもOK。まちがえた問題は もう一度 出るよ。
+      </p>
+      <div class="cat-grid" id="catGrid"></div>
+      <div class="dan-actions">
+        <button id="catAll">ぜんぶ えらぶ</button>
+        <button id="catClear">クリア</button>
+      </div>
+      <div class="pick-status" id="pickStatus"></div>
+      <button class="start" id="practiceStart">スタート!</button>
+    </div>
+
+    <div id="practiceArea" class="quiz-wrap hidden">
+      <div class="quiz-top">
+        <div class="badge-left">のこり <b id="pracRemain">0</b> 問</div>
+        <div class="badge-right" style="border-color:var(--green);color:var(--green);">れんしゅう</div>
+      </div>
+      <div class="prob-region">
+        <div class="problem" id="pracProblem"></div>
+        <div class="fb hidden" id="pracFb"></div>
+      </div>
+      <div class="hint-slot"><div class="hint" id="pracHint"></div></div>
+      <div class="keypad" id="pracKeypad"></div>
+    </div>
+
+    <div class="card hidden" id="practiceDone">
+      <h1>🎉 クリア! 🎉</h1>
+      <p id="practiceDoneMsg" style="font-size:17px;color:#5b6b82;margin-top:8px;"></p>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:16px;">
+        <button class="start" id="practiceAgain" style="margin-top:0;">もう一回</button>
+        <button class="start" id="practiceBack" style="margin-top:0;background:var(--blue);box-shadow:0 5px 0 #1c5bb8;">べつの しゅるい</button>
+      </div>
+    </div>
+  </main>
+
+  <!-- ===== テスト(50問タイムアタック) ===== -->
+  <main class="stage hidden" id="playScreen">
     <div class="card" id="readyCard">
-      <h1>ひき算 50問に ちょうせん!</h1>
+      <h1>テスト｜ひき算 50問!</h1>
       <ul class="rules">
         <li>時間は <b>5分</b>。問題の答えを 数字でおそう。おすと ＝ の右に 答えが出るよ。</li>
         <li>答えが 2けた(14など)のときは、左から じゅんに「1→4」とおしてね。</li>
@@ -218,7 +270,7 @@
       <h1>にがてもんだい</h1>
       <p style="font-size:16px;line-height:1.8;color:#5b6b82;margin-top:6px;">
         いまは にがてもんだいが ありません。<br>
-        「れんしゅう」で まちがえた問題が ここに たまって、<br>ここで もう一度 れんしゅうできるよ。
+        「テスト」で まちがえた問題が ここに たまって、<br>ここで もう一度 れんしゅうできるよ。
       </p>
     </div>
 
@@ -503,6 +555,103 @@
   }
   function removeWeak(p){ weakList = weakList.filter(w=>!(w.a===p.a&&w.b===p.b)); saveJSON(WKEY, weakList); }
 
+  // ================= れんしゅう(しゅるいをえらんで練習) =================
+  //  しゅるいを選ぶ → そのしゅるいの問題を出題。1問ごとに ○×(はなまる/✗)。
+  //  まちがえた問題は後ろに回して もう一度。ぜんぶ正解で「クリア!」。記録・カレンダー・にがてには影響しない。
+  //  各しゅるいの出題数は n(変えたいときはここ)。テストと同じ問題プールを使う。
+  const PRAC_CATS = [
+    { id:'nb',  label:'くり下がりなし（8−5）',           pool:poolNoBorrow,     n:10 },
+    { id:'t10', label:'10からひく（10−3）',             pool:poolTenMinus,     n:9  },
+    { id:'bs',  label:'くり下がり（12−9）',              pool:poolBorrowSingle, n:12 },
+    { id:'2a',  label:'2けたのひき算（23−9・23−19）',    pool:poolTypeA,        n:10 },
+    { id:'2b',  label:'2けた−2けた（33−19）',           pool:poolTypeB,        n:8  },
+  ];
+  let pracSelCats=new Set(), pracQueue=[], pracTyped="", pracLocked=false, pracTotal=0;
+  let pracPartialTimer=null, pracFbT1=null, pracFbT2=null, pracHintTimer=null;
+
+  buildPad($("pracKeypad"), pracDigit);
+  function clearPracHint(){ clearTimeout(pracHintTimer); const h=$("pracHint"); h.classList.remove("show"); h.textContent=""; }
+  function clearPracTimers(){ clearTimeout(pracPartialTimer); clearTimeout(pracFbT1); clearTimeout(pracFbT2); clearPracHint(); }
+
+  function renderCatGrid(){
+    const g=$("catGrid"); g.innerHTML="";
+    PRAC_CATS.forEach(cat=>{
+      const b=document.createElement("button");
+      b.className="cat-btn"+(pracSelCats.has(cat.id)?" on":"");
+      b.textContent=cat.label;
+      b.onclick=()=>{ pracSelCats.has(cat.id)?pracSelCats.delete(cat.id):pracSelCats.add(cat.id); $("pickStatus").textContent=""; renderCatGrid(); };
+      g.appendChild(b);
+    });
+  }
+  function openPractice(){
+    clearPracTimers(); pracLocked=false; pracTyped="";
+    $("pracFb").classList.add("hidden");
+    $("practiceArea").classList.add("hidden");
+    $("practiceDone").classList.add("hidden");
+    $("practicePick").classList.remove("hidden");
+    $("pickStatus").textContent="";
+    renderCatGrid();
+  }
+  function startPractice(){
+    if(pracSelCats.size===0){ $("pickStatus").textContent="れんしゅうする しゅるいを 1つ以上 えらんでね"; return; }
+    const list=[], used=new Set();
+    PRAC_CATS.forEach(cat=>{
+      if(!pracSelCats.has(cat.id)) return;
+      shuffle(cat.pool()).slice(0, cat.n).forEach(p=>{ const k=keyOf(p); if(!used.has(k)){ used.add(k); list.push(p); } });
+    });
+    pracQueue=shuffle(list); pracTotal=pracQueue.length; pracTyped=""; pracLocked=false;
+    clearPracTimers(); $("pracFb").classList.add("hidden");
+    $("practicePick").classList.add("hidden"); $("practiceDone").classList.add("hidden");
+    $("practiceArea").classList.remove("hidden");
+    showPracProblem();
+  }
+  function showPracProblem(){
+    const p=pracQueue[0], el=$("pracProblem");
+    el.innerHTML = eqHTML(p) + `<span class="ans" id="pracAns" style="width:${digits(p.ans)}ch"></span>`;
+    el.classList.remove("pop"); void el.offsetWidth; el.classList.add("pop");
+    $("pracRemain").textContent=pracQueue.length;
+    pracTyped=""; pracLocked=false; clearTimeout(pracPartialTimer); clearPracHint();
+    if(hasHint(p)) pracHintTimer=setTimeout(()=>{ const h=$("pracHint"); h.textContent=hintText(p); h.classList.add("show"); }, HINT_DELAY);
+  }
+  function pracDigit(n){
+    if(pracLocked) return;
+    pracTyped += String(n);
+    const span=$("pracAns"); if(span) span.textContent=pracTyped;
+    if(pracTyped.length >= digits(pracQueue[0].ans)){ pracEvaluate(); }
+    else { clearTimeout(pracPartialTimer); pracPartialTimer=setTimeout(()=>{ if(!pracLocked) pracEvaluate(); }, TWO_DIGIT_TIMEOUT); }
+  }
+  function pracEvaluate(){
+    const cur=pracQueue[0], val=parseInt(pracTyped,10), correct=(val===cur.ans);
+    clearTimeout(pracPartialTimer); clearPracHint(); pracLocked=true;
+    pracQueue.shift(); if(!correct) pracQueue.push(cur);      // まちがえたら 後ろへ回して もう一度
+    pracTyped="";
+    showPracFb(correct);
+  }
+  function showPracFb(correct){
+    const fb=$("pracFb"); fb.classList.remove("hidden","fade");
+    if(correct){
+      fb.innerHTML=`<img src="${IMG_WEAK}" alt="はなまる" onerror="this.parentNode.innerHTML='<span class=&quot;cross&quot; style=&quot;color:#2fb457&quot;>&#9711;</span>'">`;
+      try{ okSound.currentTime=0; okSound.play().catch(()=>{}); }catch(e){}
+      pracFbT1=setTimeout(()=>{ fb.classList.add("fade"); pracFbT2=setTimeout(afterPracFb,400); }, 1000);
+    } else {
+      fb.innerHTML=`<span class="cross">✗</span>`;
+      pracFbT1=setTimeout(()=>{ fb.classList.add("fade"); pracFbT2=setTimeout(afterPracFb,300); }, 700);
+    }
+  }
+  function afterPracFb(){
+    const fb=$("pracFb"); fb.classList.add("hidden"); fb.classList.remove("fade"); pracLocked=false;
+    if(pracQueue.length===0){
+      $("practiceArea").classList.add("hidden");
+      $("practiceDoneMsg").textContent = `ぜんぶで ${pracTotal}問、せいかいしたよ! すごい!`;
+      $("practiceDone").classList.remove("hidden");
+    } else showPracProblem();
+  }
+  $("practiceStart").onclick=startPractice;
+  $("practiceAgain").onclick=startPractice;
+  $("practiceBack").onclick=openPractice;
+  $("catAll").onclick=()=>{ pracSelCats=new Set(PRAC_CATS.map(c=>c.id)); $("pickStatus").textContent=""; renderCatGrid(); };
+  $("catClear").onclick=()=>{ pracSelCats.clear(); $("pickStatus").textContent=""; renderCatGrid(); };
+
   // ================= カレンダー =================
   const now=new Date(); let calY=now.getFullYear(), calM=now.getMonth(), selDay=null;
   $("prevM").onclick=()=>moveMonth(-1);
@@ -545,19 +694,25 @@
 
   // ================= タブ =================
   function showTab(name){
-    resetPlay();
+    resetPlay(); clearPracTimers();
+    $("practiceScreen").classList.toggle("hidden", name!=="practice");
     $("playScreen").classList.toggle("hidden", name!=="play");
     $("weakScreen").classList.toggle("hidden", name!=="weak");
     $("calScreen").classList.toggle("hidden", name!=="cal");
+    $("tabPractice").classList.toggle("active", name==="practice");
     $("tabPlay").classList.toggle("active", name==="play");
     $("tabWeak").classList.toggle("active", name==="weak");
     $("tabCal").classList.toggle("active", name==="cal");
+    if(name==="practice") openPractice();
     if(name==="weak") openWeak();
     if(name==="cal") renderCalendar();
   }
+  $("tabPractice").onclick=()=>showTab("practice");
   $("tabPlay").onclick=()=>showTab("play");
   $("tabWeak").onclick=()=>showTab("weak");
   $("tabCal").onclick=()=>showTab("cal");
+
+  showTab("practice");   // 最初は「れんしゅう」から
 })();
 </script>
 </body>
