@@ -165,6 +165,18 @@
   .dan-actions button:active{ transform:translateY(1px); }
   .pick-status{ min-height:20px; font-size:14px; color:var(--red); font-weight:700; margin:2px 0 6px; }
 
+  /* ひっ算(筆算)テスト:たて書き */
+  .vcalc{ display:inline-flex; flex-direction:column; align-items:flex-end;
+          font-variant-numeric:tabular-nums; font-weight:800;
+          font-size:clamp(36px,9vw,72px); line-height:1; padding-top:6px; }
+  .vrow{ display:flex; align-items:center; justify-content:flex-end; }
+  .vop,.vcell{ height:1.18em; line-height:1.18em; }   /* 空のマスにも高さを確保 → 数字を入れても下がらない */
+  .vop{ width:1.1ch; text-align:center; }
+  .vcell{ width:1.2ch; text-align:center; }
+  .vslot{ color:var(--green); border-radius:8px; }
+  .vslot.active{ background:#e7f0ff; }
+  .vrule{ align-self:stretch; height:6px; background:var(--navy); border-radius:3px; margin:6px 0 4px; }
+
   @keyframes pop { from{transform:scale(.94);opacity:.4;} to{transform:scale(1);opacity:1;} }
   @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:.55;} }
   @keyframes fadeOut { to{opacity:0;} }
@@ -176,48 +188,49 @@
   <header>
     <div class="logo"><span style="font-size:26px">✏️</span><span>ひき算タイムアタック</span></div>
     <nav class="tabs">
-      <button class="tab active" id="tabPractice">れんしゅう</button>
-      <button class="tab" id="tabPlay">テスト</button>
+      <button class="tab active" id="tabHissanPrac">れんしゅう</button>
+      <button class="tab" id="tabHissan">テスト</button>
       <button class="tab" id="tabWeak">にがてもんだい</button>
       <button class="tab" id="tabCal">カレンダー</button>
+      <button class="tab" id="tabPlay">横式テスト</button>
     </nav>
   </header>
 
-  <!-- ===== れんしゅう(しゅるいをえらんで練習) ===== -->
-  <main class="stage" id="practiceScreen">
-    <div class="card" id="practicePick">
+  <!-- ===== ひっ算れんしゅう(筆算・しゅるいをえらんで練習) ===== -->
+  <main class="stage hidden" id="hpScreen">
+    <div class="card" id="hpPick">
       <h1>れんしゅう</h1>
       <p style="font-size:15px;color:#5b6b82;line-height:1.85;margin-bottom:2px;">
-        れんしゅうしたい 「しゅるい」を えらんで スタート!<br>いくつ えらんでもOK。まちがえた問題は もう一度 出るよ。
+        れんしゅうしたい 「しゅるい」を えらんで スタート!<br>ひっ算の形(たて書き)で 出るよ。まちがえた問題は もう一度 出るよ。
       </p>
-      <div class="cat-grid" id="catGrid"></div>
+      <div class="cat-grid" id="hpCatGrid"></div>
       <div class="dan-actions">
-        <button id="catAll">ぜんぶ えらぶ</button>
-        <button id="catClear">クリア</button>
+        <button id="hpCatAll">ぜんぶ えらぶ</button>
+        <button id="hpCatClear">クリア</button>
       </div>
-      <div class="pick-status" id="pickStatus"></div>
-      <button class="start" id="practiceStart">スタート!</button>
+      <div class="pick-status" id="hpPickStatus"></div>
+      <button class="start" id="hpStart">スタート!</button>
     </div>
 
-    <div id="practiceArea" class="quiz-wrap hidden">
+    <div id="hpArea" class="quiz-wrap hidden">
       <div class="quiz-top">
-        <div class="badge-left">のこり <b id="pracRemain">0</b> 問</div>
-        <div class="badge-right" style="border-color:var(--green);color:var(--green);">れんしゅう</div>
+        <div class="badge-left">のこり <b id="hpRemain">0</b> 問</div>
+        <div class="badge-right" style="border-color:var(--green);color:var(--green);">ひっ算</div>
       </div>
       <div class="prob-region">
-        <div class="problem" id="pracProblem"></div>
-        <div class="fb hidden" id="pracFb"></div>
+        <div class="problem" id="hpProblem"></div>
+        <div class="fb hidden" id="hpFb"></div>
       </div>
-      <div class="hint-slot"><div class="hint" id="pracHint"></div></div>
-      <div class="keypad" id="pracKeypad"></div>
+      <div class="hint-slot"><div class="hint" id="hpHint"></div></div>
+      <div class="keypad" id="hpKeypad"></div>
     </div>
 
-    <div class="card hidden" id="practiceDone">
+    <div class="card hidden" id="hpDone">
       <h1>🎉 クリア! 🎉</h1>
-      <p id="practiceDoneMsg" style="font-size:17px;color:#5b6b82;margin-top:8px;"></p>
+      <p id="hpDoneMsg" style="font-size:17px;color:#5b6b82;margin-top:8px;"></p>
       <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:16px;">
-        <button class="start" id="practiceAgain" style="margin-top:0;">もう一回</button>
-        <button class="start" id="practiceBack" style="margin-top:0;background:var(--blue);box-shadow:0 5px 0 #1c5bb8;">べつの しゅるい</button>
+        <button class="start" id="hpAgain" style="margin-top:0;">もう一回</button>
+        <button class="start" id="hpBack" style="margin-top:0;background:var(--blue);box-shadow:0 5px 0 #1c5bb8;">べつの しゅるい</button>
       </div>
     </div>
   </main>
@@ -225,7 +238,7 @@
   <!-- ===== テスト(50問タイムアタック) ===== -->
   <main class="stage hidden" id="playScreen">
     <div class="card" id="readyCard">
-      <h1>テスト｜ひき算 50問!</h1>
+      <h1>横式テスト｜ひき算 50問!</h1>
       <ul class="rules">
         <li>時間は <b>5分</b>。問題の答えを 数字でおそう。おすと ＝ の右に 答えが出るよ。</li>
         <li>答えが 2けた(14など)のときは、左から じゅんに「1→4」とおしてね。</li>
@@ -261,6 +274,49 @@
         <textarea class="copy-text" id="copyText" readonly></textarea>
       </div>
       <button class="start" id="againBtn">もう一回!</button>
+    </div>
+  </main>
+
+  <!-- ===== ひっ算テスト(筆算・50問タイムアタック) ===== -->
+  <main class="stage hidden" id="hissanScreen">
+    <div class="card" id="hissanReady">
+      <h1>テスト｜ひき算 50問!</h1>
+      <ul class="rules">
+        <li>問題は <b>ひっ算の形(たて書き)</b>で 出るよ。時間は <b>5分</b>。</li>
+        <li>答えが 2けた(14など)のときは、<b>左から</b> じゅんに「1→4」とおしてね。青い マスから おすよ。</li>
+        <li>くり下がりに ちゅうい!「うえ − した」で 考えるよ。</li>
+        <li>むずかしい問題は <b>3秒たつと ヒント</b>が出るよ。</li>
+        <li>とちゅうで 正解・まちがいは 出ないよ。さいごまで 全力で!</li>
+        <li>50問 = <b>100点まんてん</b>。100点のときだけ タイムが記録に残るよ。</li>
+      </ul>
+      <button class="start" id="hissanStartBtn">スタート!</button>
+    </div>
+
+    <div id="hissanQuiz" class="quiz-wrap hidden">
+      <div class="quiz-top">
+        <div class="badge-left">残り <b id="hissanRemain">50</b> 問</div>
+        <div class="badge-right" id="hissanClock">⏱ 5:00</div>
+      </div>
+      <div class="prob-region"><div class="problem" id="hissanProblem"></div></div>
+      <div class="hint-slot"><div class="hint" id="hissanHint"></div></div>
+      <div class="keypad" id="hissanKeypad"></div>
+    </div>
+
+    <div class="card hidden" id="hissanResult">
+      <h1 id="hissanResultTitle">おつかれさま!</h1>
+      <div class="score-big"><span id="hissanScoreVal">0</span><span>点</span></div>
+      <p class="sub" id="hissanResultSub"></p>
+      <div id="hissanResultTimeWrap"></div>
+      <div class="mistakes-wrap">
+        <div class="mistakes-title" id="hissanMistakesTitle"></div>
+        <div class="mistakes" id="hissanMistakes"></div>
+      </div>
+      <div class="copy-box">
+        <button class="copy-btn" id="hissanCopyBtn">📋 結果をコピー(Classroom用)</button>
+        <span class="copy-status" id="hissanCopyStatus"></span>
+        <textarea class="copy-text" id="hissanCopyText" readonly></textarea>
+      </div>
+      <button class="start" id="hissanAgainBtn">もう一回!</button>
     </div>
   </main>
 
@@ -427,28 +483,16 @@
     const elapsed=Math.min(Date.now()-startAt,LIMIT);
     let correct=0; const wrongs=[];
     answers.forEach((a,i)=>{ if(!problems[i]) return; if(a===problems[i].ans) correct++; else wrongs.push({a:problems[i].a,b:problems[i].b,ans:problems[i].ans,given:a}); });
-    // まちがえた問題を「到達レベルに応じて」にがてに追加
-    //   問題番号→index : 1〜40=0〜39, 41〜47=40〜46, 48〜50=47〜49
-    const correctInRange=(lo,hi)=>{ for(let i=lo;i<=hi && i<answers.length;i++){ if(problems[i] && answers[i]===problems[i].ans) return true; } return false; };
-    let cutoff;
-    if(correctInRange(47,49))      cutoff=49;   // 48〜50で1つでも正解 → 1〜50の間違いを追加
-    else if(correctInRange(40,46)) cutoff=46;   // 41〜47で1つでも正解 → 1〜47の間違いを追加
-    else                           cutoff=39;   // 41〜50で正解なし/未到達 → 1〜40の間違いを追加
-    answers.forEach((a,i)=>{ if(problems[i] && a!==problems[i].ans && i<=cutoff) addWeak(problems[i]); });
-    saveJSON(WKEY, weakList);
     const score=correct*2, perfect=score===100;
-    const k=todayKey(), next={score, timeMs: perfect?elapsed:null, at:Date.now()};
-    records.days[k]=betterOfDay(records.days[k], next);
-    if(perfect) records.bestTimeMs = records.bestTimeMs==null ? elapsed : Math.min(records.bestTimeMs, elapsed);
-    saveJSON(KEY, records);
+    // 横式テストは 記録(カレンダー・最高タイム)や にがて には残さない(それらは筆算「テスト」が対象)
 
     $("quizArea").classList.add("hidden"); $("resultCard").classList.remove("hidden");
     $("resultTitle").textContent = perfect ? "🌟 パーフェクト!! 🌟" : "おつかれさま!";
     $("scoreVal").textContent = score;
     $("resultSub").textContent = `${correct} 問正解 / ${TOTAL} 問中(答えた数 ${answers.length} 問)`;
     $("resultTimeWrap").innerHTML = perfect
-      ? `<div class="time-box">タイム <b>${fmtRec(elapsed)}</b><div style="font-size:14px;margin-top:2px">カレンダーに記録したよ!</div></div>`
-      : `<p class="sub">100点をとると タイムが記録されるよ。もう一回 ちょうせんしてみよう!</p>`;
+      ? `<div class="time-box">タイム <b>${fmtRec(elapsed)}</b></div>`
+      : `<p class="sub">もう一回 ちょうせんしてみよう!</p>`;
     lastResult = { score, correct, answered: answers.length, timeMs: elapsed, perfect, wrongs };
     renderMistakes(wrongs);
     $("copyText").value = buildResultText(lastResult);
@@ -474,7 +518,7 @@
   }
   function buildResultText(r){
     const d=new Date(), L=[];
-    L.push("【ひき算タイムアタック】");
+    L.push("【ひき算 横式テスト】");
     L.push(`${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`);
     L.push(`とくてん ${r.score}点 / 100点${r.perfect?" 🌟パーフェクト":""}`);
     if(r.perfect) L.push(`タイム ${fmtRec(r.timeMs)}`);
@@ -496,8 +540,151 @@
     $("readyCard").classList.remove("hidden");
   }
 
+  // ================= ひっ算テスト(筆算・入力は「大きいくらい」から) =================
+  //  問題系統は「テスト」と同じ makeProblems() を使用。表示だけ たて書き(筆算)。
+  //  答えは 十のくらい→一のくらい の順に入力(ひだり→みぎ)=「テスト」と同じ向き。青いマスが「次に入れるくらい」。
+  //  記録・カレンダー・にがて・最高タイムは「テスト」と共有する。
+  let hProblems=[], hAnswers=[], hIdx=0, hStartAt=0, hTimer=null, hFinished=false, hTyped="";
+  let hHintTimer=null, hPartialTimer=null, hDelayTimer=null, hLocked=false, hAnsDigits=1, hLastResult=null;
+
+  buildPad($("hissanKeypad"), hDigit);
+  function hClearHint(){ clearTimeout(hHintTimer); const h=$("hissanHint"); h.classList.remove("show"); h.textContent=""; }
+  function hClearTimers(){ clearTimeout(hPartialTimer); clearTimeout(hDelayTimer); }
+
+  // 筆算(たて書き)のHTML。cols=たてのけた数(=ひかれる数のけた数)。答えは右づめのスロット。
+  //  ansDigits=答えのけた数、slotPrefix=答えマスのid接頭辞(テストとれんしゅうで別にする)。
+  function vertHTML(p, ansDigits, slotPrefix){
+    const cols = digits(p.a);
+    const aS = String(p.a).padStart(cols," ");
+    const bS = String(p.b).padStart(cols," ");
+    const cell = ch => `<span class="vcell">${ch===" "?"":ch}</span>`;
+    const minuend = `<span class="vop"></span>` + [...aS].map(cell).join("");
+    const subtra  = `<span class="vop">−</span>` + [...bS].map(cell).join("");
+    let slots = `<span class="vop"></span>`;
+    const filledStart = cols - ansDigits;          // 答えは右づめ
+    for(let i=0;i<cols;i++){
+      if(i<filledStart) slots += `<span class="vcell"></span>`;
+      else slots += `<span class="vcell vslot" id="${slotPrefix}${i-filledStart}"></span>`;
+    }
+    return `<div class="vcalc">`
+      + `<div class="vrow">${minuend}</div>`
+      + `<div class="vrow">${subtra}</div>`
+      + `<div class="vrule"></div>`
+      + `<div class="vrow">${slots}</div>`
+      + `</div>`;
+  }
+  // 答えマスを左づめ(大きいくらいから)で表示。次に入れるマスを青く。
+  function renderVSlots(slotPrefix, n, filled){
+    for(let i=0;i<n;i++){
+      const el=$(slotPrefix+i); if(!el) continue;
+      el.textContent = (i < filled.length) ? filled[i] : "";
+      el.classList.toggle("active", i === filled.length);
+    }
+  }
+  function hRenderSlots(){ renderVSlots("hSlot", hAnsDigits, hTyped); }
+  function hShowProblem(){
+    const p=hProblems[hIdx]; hAnsDigits=digits(p.ans);
+    const el=$("hissanProblem");
+    el.innerHTML = vertHTML(p, hAnsDigits, "hSlot");
+    el.classList.remove("pop"); void el.offsetWidth; el.classList.add("pop");
+    $("hissanRemain").textContent=TOTAL-hIdx;
+    hTyped=""; hLocked=false; hClearTimers(); hClearHint(); hRenderSlots();
+    if(hasHint(p)) hHintTimer=setTimeout(()=>{ const h=$("hissanHint"); h.textContent=hintText(p); h.classList.add("show"); }, HINT_DELAY);
+  }
+  function hRecordNext(delay){
+    hLocked=true; hClearTimers();
+    hAnswers.push(hTyped===""?NaN:parseInt(hTyped,10));
+    const go=()=>{ if(hFinished) return; hClearHint(); hTyped=""; hLocked=false; hIdx=hAnswers.length; if(hIdx>=hProblems.length) hFinish(); else hShowProblem(); };
+    if(delay>0) hDelayTimer=setTimeout(go, delay); else go();
+  }
+  function hDigit(n){
+    if(hFinished || hLocked) return;
+    hTyped = hTyped + String(n);                     // 十のくらいから(ひだり→みぎ)
+    hRenderSlots();
+    if(hTyped.length >= hAnsDigits){
+      hRecordNext(NEXT_DELAY);                        // 答えを見せて0.5秒後に次へ
+    } else {
+      clearTimeout(hPartialTimer);                    // 一のくらいが未入力のまま → 5秒で次へ(不正解)
+      hPartialTimer=setTimeout(()=>{ if(!hFinished && !hLocked) hRecordNext(0); }, TWO_DIGIT_TIMEOUT);
+    }
+  }
+  function hStartPlay(){
+    hProblems=makeProblems(); hAnswers=[]; hIdx=0; hFinished=false; hTyped=""; hLocked=false;
+    $("hissanReady").classList.add("hidden"); $("hissanResult").classList.add("hidden");
+    $("hissanQuiz").classList.remove("hidden");
+    hShowProblem(); $("hissanClock").classList.remove("low");
+    hStartAt=Date.now(); hTimer=setInterval(hTick,200);
+  }
+  function hTick(){
+    const left=LIMIT-(Date.now()-hStartAt);
+    $("hissanClock").textContent="⏱ "+fmtClock(left);
+    $("hissanClock").classList.toggle("low", left<=30000);
+    if(left<=0) hFinish();
+  }
+  function hFinish(){
+    if(hFinished) return; hFinished=true; clearInterval(hTimer); hClearTimers(); hClearHint();
+    const elapsed=Math.min(Date.now()-hStartAt,LIMIT);
+    let correct=0; const wrongs=[];
+    hAnswers.forEach((a,i)=>{ if(!hProblems[i]) return; if(a===hProblems[i].ans) correct++; else wrongs.push({a:hProblems[i].a,b:hProblems[i].b,ans:hProblems[i].ans,given:a}); });
+    const correctInRange=(lo,hi)=>{ for(let i=lo;i<=hi && i<hAnswers.length;i++){ if(hProblems[i] && hAnswers[i]===hProblems[i].ans) return true; } return false; };
+    let cutoff;
+    if(correctInRange(47,49))      cutoff=49;
+    else if(correctInRange(40,46)) cutoff=46;
+    else                           cutoff=39;
+    hAnswers.forEach((a,i)=>{ if(hProblems[i] && a!==hProblems[i].ans && i<=cutoff) addWeak(hProblems[i]); });
+    saveJSON(WKEY, weakList);
+    const score=correct*2, perfect=score===100;
+    const k=todayKey(), next={score, timeMs: perfect?elapsed:null, at:Date.now()};
+    records.days[k]=betterOfDay(records.days[k], next);
+    if(perfect) records.bestTimeMs = records.bestTimeMs==null ? elapsed : Math.min(records.bestTimeMs, elapsed);
+    saveJSON(KEY, records);
+
+    $("hissanQuiz").classList.add("hidden"); $("hissanResult").classList.remove("hidden");
+    $("hissanResultTitle").textContent = perfect ? "🌟 パーフェクト!! 🌟" : "おつかれさま!";
+    $("hissanScoreVal").textContent = score;
+    $("hissanResultSub").textContent = `${correct} 問正解 / ${TOTAL} 問中(答えた数 ${hAnswers.length} 問)`;
+    $("hissanResultTimeWrap").innerHTML = perfect
+      ? `<div class="time-box">タイム <b>${fmtRec(elapsed)}</b><div style="font-size:14px;margin-top:2px">カレンダーに記録したよ!</div></div>`
+      : `<p class="sub">100点をとると タイムが記録されるよ。もう一回 ちょうせんしてみよう!</p>`;
+    hLastResult = { score, correct, answered: hAnswers.length, timeMs: elapsed, perfect, wrongs };
+    hRenderMistakes(wrongs);
+    $("hissanCopyText").value = hBuildResultText(hLastResult);
+    $("hissanCopyStatus").textContent = "";
+  }
+  function hRenderMistakes(wrongs){
+    const mt=$("hissanMistakesTitle"), ml=$("hissanMistakes");
+    if(!wrongs.length){ mt.textContent="まちがえた問題は ありません!"; ml.innerHTML=""; return; }
+    mt.textContent=`まちがえた問題(${wrongs.length}問)`;
+    ml.innerHTML = wrongs.map(w=>`<span class="miss">${w.a}−${w.b}＝${w.ans}<span class="you">✕${Number.isNaN(w.given)?"—":w.given}</span></span>`).join("");
+  }
+  function hBuildResultText(r){
+    const d=new Date(), L=[];
+    L.push("【ひき算テスト】");
+    L.push(`${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`);
+    L.push(`とくてん ${r.score}点 / 100点${r.perfect?" 🌟パーフェクト":""}`);
+    if(r.perfect) L.push(`タイム ${fmtRec(r.timeMs)}`);
+    L.push(`正解 ${r.correct}問(答えた数 ${r.answered}問)`);
+    if(!r.wrongs.length) L.push("まちがえた問題 なし");
+    else L.push(`まちがえた問題(${r.wrongs.length}問) ` + r.wrongs.map(w=>`${w.a}-${w.b}=${w.ans}`).join("、"));
+    return L.join("\n");
+  }
+  async function hCopyResult(){
+    const ta=$("hissanCopyText"), text=ta.value; let ok=false;
+    try{ await navigator.clipboard.writeText(text); ok=true; }
+    catch(e){ try{ ta.focus(); ta.select(); ok=document.execCommand("copy"); }catch(_){} }
+    $("hissanCopyStatus").textContent = ok ? "コピーしました!" : "うまくいかないときは、下の文をえらんでコピーしてね";
+  }
+  function hResetPlay(){
+    clearInterval(hTimer); hClearTimers(); hFinished=true; hLocked=false; hClearHint();
+    $("hissanQuiz").classList.add("hidden"); $("hissanResult").classList.add("hidden");
+    $("hissanReady").classList.remove("hidden");
+  }
+  $("hissanStartBtn").onclick=hStartPlay;
+  $("hissanAgainBtn").onclick=hStartPlay;
+  $("hissanCopyBtn").onclick=hCopyResult;
+
   // ================= にがてもんだい =================
-  let wq=[], wtyped="", wLocked=false, wHintTimer=null, wPartialTimer=null;
+  let wq=[], wtyped="", wLocked=false, wHintTimer=null, wPartialTimer=null, wAnsDigits=1;
 
   buildPad($("weakKeypad"), wDigit);
   function clearWHint(){ clearTimeout(wHintTimer); const h=$("weakHint"); h.classList.remove("show"); h.textContent=""; }
@@ -512,15 +699,16 @@
     if(has) showWeakProblem();
   }
   function showWeakProblem(){
-    const p=wq[0], el=$("weakProblem");
-    el.innerHTML = eqHTML(p) + `<span class="ans" id="wAns" style="width:${digits(p.ans)}ch"></span>`;
+    const p=wq[0]; wAnsDigits=digits(p.ans);
+    const el=$("weakProblem");
+    el.innerHTML = vertHTML(p, wAnsDigits, "wSlot");
     el.classList.remove("pop"); void el.offsetWidth; el.classList.add("pop");
     $("weakRemain").textContent=wq.length;
-    wtyped=""; clearTimeout(wPartialTimer); clearWHint();
+    wtyped=""; clearTimeout(wPartialTimer); clearWHint(); renderVSlots("wSlot", wAnsDigits, wtyped);
     if(hasHint(p)) wHintTimer=setTimeout(()=>{ const h=$("weakHint"); h.textContent=hintText(p); h.classList.add("show"); }, HINT_DELAY);
   }
   function wEvaluate(){
-    const cur=wq[0], val=parseInt(wtyped,10), correct=(val===cur.ans);
+    const cur=wq[0], val=wtyped===""?NaN:parseInt(wtyped,10), correct=(val===cur.ans);
     clearTimeout(wPartialTimer); clearWHint(); wLocked=true;
     if(correct){ wq.shift(); removeWeak(cur); } else { wq.shift(); wq.push(cur); }
     wtyped="";
@@ -528,9 +716,9 @@
   }
   function wDigit(n){
     if(wLocked) return;
-    wtyped += String(n);
-    const span=$("wAns"); if(span) span.textContent=wtyped;
-    if(wtyped.length >= digits(wq[0].ans)){
+    wtyped += String(n);                       // 十のくらいから(ひだり→みぎ)
+    renderVSlots("wSlot", wAnsDigits, wtyped);
+    if(wtyped.length >= wAnsDigits){
       wEvaluate();
     } else {
       clearTimeout(wPartialTimer);
@@ -555,10 +743,8 @@
   }
   function removeWeak(p){ weakList = weakList.filter(w=>!(w.a===p.a&&w.b===p.b)); saveJSON(WKEY, weakList); }
 
-  // ================= れんしゅう(しゅるいをえらんで練習) =================
-  //  しゅるいを選ぶ → そのしゅるいの問題を出題。1問ごとに ○×(はなまる/✗)。
-  //  まちがえた問題は後ろに回して もう一度。ぜんぶ正解で「クリア!」。記録・カレンダー・にがてには影響しない。
-  //  各しゅるいの出題数は n(変えたいときはここ)。テストと同じ問題プールを使う。
+  // ================= れんしゅうの しゅるい定義(PRAC_CATS) =================
+  //  「れんしゅう」(筆算)で使う、しゅるいと出題数の定義。各しゅるいの出題数は n(変えたいときはここ)。
   const PRAC_CATS = [
     { id:'nb',  label:'くり下がりなし（8−5）',           pool:poolNoBorrow,     n:10 },
     { id:'t10', label:'10からひく（10−3）',             pool:poolTenMinus,     n:9  },
@@ -566,91 +752,97 @@
     { id:'2a',  label:'2けたのひき算（23−9・23−19）',    pool:poolTypeA,        n:10 },
     { id:'2b',  label:'2けた−2けた（33−19）',           pool:poolTypeB,        n:8  },
   ];
-  let pracSelCats=new Set(), pracQueue=[], pracTyped="", pracLocked=false, pracTotal=0;
-  let pracPartialTimer=null, pracFbT1=null, pracFbT2=null, pracHintTimer=null;
 
-  buildPad($("pracKeypad"), pracDigit);
-  function clearPracHint(){ clearTimeout(pracHintTimer); const h=$("pracHint"); h.classList.remove("show"); h.textContent=""; }
-  function clearPracTimers(){ clearTimeout(pracPartialTimer); clearTimeout(pracFbT1); clearTimeout(pracFbT2); clearPracHint(); }
+  // ================= ひっ算れんしゅう(筆算・しゅるいをえらんで練習) =================
+  //  「れんしゅう」と同じ PRAC_CATS(同じ問題配列)を使用。表示は たて書き(筆算)、
+  //  入力は 十のくらい→一のくらい(=ひっ算テストと同じ向き)。1問ごとに ○×(はなまる/✗)。
+  //  まちがえた問題は後ろに回して もう一度。記録・カレンダー・にがてには影響しない。
+  let hpSelCats=new Set(), hpQueue=[], hpTyped="", hpLocked=false, hpTotal=0, hpAnsDigits=1;
+  let hpPartialTimer=null, hpFbT1=null, hpFbT2=null, hpHintTimer=null;
 
-  function renderCatGrid(){
-    const g=$("catGrid"); g.innerHTML="";
+  buildPad($("hpKeypad"), hpDigit);
+  function clearHpHint(){ clearTimeout(hpHintTimer); const h=$("hpHint"); h.classList.remove("show"); h.textContent=""; }
+  function clearHpTimers(){ clearTimeout(hpPartialTimer); clearTimeout(hpFbT1); clearTimeout(hpFbT2); clearHpHint(); }
+
+  function renderHpCatGrid(){
+    const g=$("hpCatGrid"); g.innerHTML="";
     PRAC_CATS.forEach(cat=>{
       const b=document.createElement("button");
-      b.className="cat-btn"+(pracSelCats.has(cat.id)?" on":"");
+      b.className="cat-btn"+(hpSelCats.has(cat.id)?" on":"");
       b.textContent=cat.label;
-      b.onclick=()=>{ pracSelCats.has(cat.id)?pracSelCats.delete(cat.id):pracSelCats.add(cat.id); $("pickStatus").textContent=""; renderCatGrid(); };
+      b.onclick=()=>{ hpSelCats.has(cat.id)?hpSelCats.delete(cat.id):hpSelCats.add(cat.id); $("hpPickStatus").textContent=""; renderHpCatGrid(); };
       g.appendChild(b);
     });
   }
-  function openPractice(){
-    clearPracTimers(); pracLocked=false; pracTyped="";
-    $("pracFb").classList.add("hidden");
-    $("practiceArea").classList.add("hidden");
-    $("practiceDone").classList.add("hidden");
-    $("practicePick").classList.remove("hidden");
-    $("pickStatus").textContent="";
-    renderCatGrid();
+  function openHp(){
+    clearHpTimers(); hpLocked=false; hpTyped="";
+    $("hpFb").classList.add("hidden");
+    $("hpArea").classList.add("hidden");
+    $("hpDone").classList.add("hidden");
+    $("hpPick").classList.remove("hidden");
+    $("hpPickStatus").textContent="";
+    renderHpCatGrid();
   }
-  function startPractice(){
-    if(pracSelCats.size===0){ $("pickStatus").textContent="れんしゅうする しゅるいを 1つ以上 えらんでね"; return; }
+  function startHp(){
+    if(hpSelCats.size===0){ $("hpPickStatus").textContent="れんしゅうする しゅるいを 1つ以上 えらんでね"; return; }
     const list=[], used=new Set();
     PRAC_CATS.forEach(cat=>{
-      if(!pracSelCats.has(cat.id)) return;
+      if(!hpSelCats.has(cat.id)) return;
       shuffle(cat.pool()).slice(0, cat.n).forEach(p=>{ const k=keyOf(p); if(!used.has(k)){ used.add(k); list.push(p); } });
     });
-    pracQueue=shuffle(list); pracTotal=pracQueue.length; pracTyped=""; pracLocked=false;
-    clearPracTimers(); $("pracFb").classList.add("hidden");
-    $("practicePick").classList.add("hidden"); $("practiceDone").classList.add("hidden");
-    $("practiceArea").classList.remove("hidden");
-    showPracProblem();
+    hpQueue=shuffle(list); hpTotal=hpQueue.length; hpTyped=""; hpLocked=false;
+    clearHpTimers(); $("hpFb").classList.add("hidden");
+    $("hpPick").classList.add("hidden"); $("hpDone").classList.add("hidden");
+    $("hpArea").classList.remove("hidden");
+    showHpProblem();
   }
-  function showPracProblem(){
-    const p=pracQueue[0], el=$("pracProblem");
-    el.innerHTML = eqHTML(p) + `<span class="ans" id="pracAns" style="width:${digits(p.ans)}ch"></span>`;
+  function showHpProblem(){
+    const p=hpQueue[0]; hpAnsDigits=digits(p.ans);
+    const el=$("hpProblem");
+    el.innerHTML = vertHTML(p, hpAnsDigits, "hpSlot");
     el.classList.remove("pop"); void el.offsetWidth; el.classList.add("pop");
-    $("pracRemain").textContent=pracQueue.length;
-    pracTyped=""; pracLocked=false; clearTimeout(pracPartialTimer); clearPracHint();
-    if(hasHint(p)) pracHintTimer=setTimeout(()=>{ const h=$("pracHint"); h.textContent=hintText(p); h.classList.add("show"); }, HINT_DELAY);
+    $("hpRemain").textContent=hpQueue.length;
+    hpTyped=""; hpLocked=false; clearTimeout(hpPartialTimer); clearHpHint(); renderVSlots("hpSlot", hpAnsDigits, hpTyped);
+    if(hasHint(p)) hpHintTimer=setTimeout(()=>{ const h=$("hpHint"); h.textContent=hintText(p); h.classList.add("show"); }, HINT_DELAY);
   }
-  function pracDigit(n){
-    if(pracLocked) return;
-    pracTyped += String(n);
-    const span=$("pracAns"); if(span) span.textContent=pracTyped;
-    if(pracTyped.length >= digits(pracQueue[0].ans)){ pracEvaluate(); }
-    else { clearTimeout(pracPartialTimer); pracPartialTimer=setTimeout(()=>{ if(!pracLocked) pracEvaluate(); }, TWO_DIGIT_TIMEOUT); }
+  function hpDigit(n){
+    if(hpLocked) return;
+    hpTyped = hpTyped + String(n);                    // 十のくらいから(ひだり→みぎ)
+    renderVSlots("hpSlot", hpAnsDigits, hpTyped);
+    if(hpTyped.length >= hpAnsDigits){ hpEvaluate(); }
+    else { clearTimeout(hpPartialTimer); hpPartialTimer=setTimeout(()=>{ if(!hpLocked) hpEvaluate(); }, TWO_DIGIT_TIMEOUT); }
   }
-  function pracEvaluate(){
-    const cur=pracQueue[0], val=parseInt(pracTyped,10), correct=(val===cur.ans);
-    clearTimeout(pracPartialTimer); clearPracHint(); pracLocked=true;
-    pracQueue.shift(); if(!correct) pracQueue.push(cur);      // まちがえたら 後ろへ回して もう一度
-    pracTyped="";
-    showPracFb(correct);
+  function hpEvaluate(){
+    const cur=hpQueue[0], val=hpTyped===""?NaN:parseInt(hpTyped,10), correct=(val===cur.ans);
+    clearTimeout(hpPartialTimer); clearHpHint(); hpLocked=true;
+    hpQueue.shift(); if(!correct) hpQueue.push(cur);   // まちがえたら 後ろへ回して もう一度
+    hpTyped="";
+    showHpFb(correct);
   }
-  function showPracFb(correct){
-    const fb=$("pracFb"); fb.classList.remove("hidden","fade");
+  function showHpFb(correct){
+    const fb=$("hpFb"); fb.classList.remove("hidden","fade");
     if(correct){
       fb.innerHTML=`<img src="${IMG_WEAK}" alt="はなまる" onerror="this.parentNode.innerHTML='<span class=&quot;cross&quot; style=&quot;color:#2fb457&quot;>&#9711;</span>'">`;
       try{ okSound.currentTime=0; okSound.play().catch(()=>{}); }catch(e){}
-      pracFbT1=setTimeout(()=>{ fb.classList.add("fade"); pracFbT2=setTimeout(afterPracFb,400); }, 1000);
+      hpFbT1=setTimeout(()=>{ fb.classList.add("fade"); hpFbT2=setTimeout(afterHpFb,400); }, 1000);
     } else {
       fb.innerHTML=`<span class="cross">✗</span>`;
-      pracFbT1=setTimeout(()=>{ fb.classList.add("fade"); pracFbT2=setTimeout(afterPracFb,300); }, 700);
+      hpFbT1=setTimeout(()=>{ fb.classList.add("fade"); hpFbT2=setTimeout(afterHpFb,300); }, 700);
     }
   }
-  function afterPracFb(){
-    const fb=$("pracFb"); fb.classList.add("hidden"); fb.classList.remove("fade"); pracLocked=false;
-    if(pracQueue.length===0){
-      $("practiceArea").classList.add("hidden");
-      $("practiceDoneMsg").textContent = `ぜんぶで ${pracTotal}問、せいかいしたよ! すごい!`;
-      $("practiceDone").classList.remove("hidden");
-    } else showPracProblem();
+  function afterHpFb(){
+    const fb=$("hpFb"); fb.classList.add("hidden"); fb.classList.remove("fade"); hpLocked=false;
+    if(hpQueue.length===0){
+      $("hpArea").classList.add("hidden");
+      $("hpDoneMsg").textContent = `ぜんぶで ${hpTotal}問、せいかいしたよ! すごい!`;
+      $("hpDone").classList.remove("hidden");
+    } else showHpProblem();
   }
-  $("practiceStart").onclick=startPractice;
-  $("practiceAgain").onclick=startPractice;
-  $("practiceBack").onclick=openPractice;
-  $("catAll").onclick=()=>{ pracSelCats=new Set(PRAC_CATS.map(c=>c.id)); $("pickStatus").textContent=""; renderCatGrid(); };
-  $("catClear").onclick=()=>{ pracSelCats.clear(); $("pickStatus").textContent=""; renderCatGrid(); };
+  $("hpStart").onclick=startHp;
+  $("hpAgain").onclick=startHp;
+  $("hpBack").onclick=openHp;
+  $("hpCatAll").onclick=()=>{ hpSelCats=new Set(PRAC_CATS.map(c=>c.id)); $("hpPickStatus").textContent=""; renderHpCatGrid(); };
+  $("hpCatClear").onclick=()=>{ hpSelCats.clear(); $("hpPickStatus").textContent=""; renderHpCatGrid(); };
 
   // ================= カレンダー =================
   const now=new Date(); let calY=now.getFullYear(), calM=now.getMonth(), selDay=null;
@@ -693,26 +885,30 @@
   }
 
   // ================= タブ =================
+  //  内部名: hpractice=れんしゅう(筆算) / hissan=テスト(筆算) / weak=にがて / cal=カレンダー / play=横式テスト
   function showTab(name){
-    resetPlay(); clearPracTimers();
-    $("practiceScreen").classList.toggle("hidden", name!=="practice");
-    $("playScreen").classList.toggle("hidden", name!=="play");
+    resetPlay(); hResetPlay(); clearHpTimers();
+    $("hpScreen").classList.toggle("hidden", name!=="hpractice");
+    $("hissanScreen").classList.toggle("hidden", name!=="hissan");
     $("weakScreen").classList.toggle("hidden", name!=="weak");
     $("calScreen").classList.toggle("hidden", name!=="cal");
-    $("tabPractice").classList.toggle("active", name==="practice");
-    $("tabPlay").classList.toggle("active", name==="play");
+    $("playScreen").classList.toggle("hidden", name!=="play");
+    $("tabHissanPrac").classList.toggle("active", name==="hpractice");
+    $("tabHissan").classList.toggle("active", name==="hissan");
     $("tabWeak").classList.toggle("active", name==="weak");
     $("tabCal").classList.toggle("active", name==="cal");
-    if(name==="practice") openPractice();
+    $("tabPlay").classList.toggle("active", name==="play");
+    if(name==="hpractice") openHp();
     if(name==="weak") openWeak();
     if(name==="cal") renderCalendar();
   }
-  $("tabPractice").onclick=()=>showTab("practice");
-  $("tabPlay").onclick=()=>showTab("play");
+  $("tabHissanPrac").onclick=()=>showTab("hpractice");
+  $("tabHissan").onclick=()=>showTab("hissan");
   $("tabWeak").onclick=()=>showTab("weak");
   $("tabCal").onclick=()=>showTab("cal");
+  $("tabPlay").onclick=()=>showTab("play");
 
-  showTab("practice");   // 最初は「れんしゅう」から
+  showTab("hpractice");   // 最初は「れんしゅう」(筆算)から
 })();
 </script>
 </body>
